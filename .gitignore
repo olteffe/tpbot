@@ -5,6 +5,8 @@
 # Other
 notes.rst
 test/
+index.html
+test.py
 
 ### Python template
 # Byte-compiled / optimized / DLL files
