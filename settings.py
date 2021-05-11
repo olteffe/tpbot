@@ -1,4 +1,5 @@
 BASE_URL = "https://cheb.ws/{}/?agency=-&page={}"
+AGENCY_URL = "https://cheb.ws/ned.htm?page={}"
 COLUMN_NAME = (
     "prodam",
     "sdam",

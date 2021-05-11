@@ -3,6 +3,7 @@ import re
 from bs4 import BeautifulSoup
 
 import settings
+import agency
 
 
 def write_page_html():
@@ -29,7 +30,7 @@ def scrappy_ad_info():
 
 
 def check_pagination() -> int:
-    """return total number of pages"""
+    """return total number of ad pages"""
     with open("index.html", "r") as file:
         source = file.read()
     soup = BeautifulSoup(source, "lxml")
@@ -41,18 +42,16 @@ def check_pagination() -> int:
         return 1
 
 
-def scrappy_agency_number():
-    pass
-
-
 def save_in_db():
     pass
 
 
 if __name__ == '__main__':
-    write_page_html()
-    scrappy_ad_info()
+    # write_page_html()
+    # scrappy_ad_info()
     # print(check_pagination())
     # list_links = []
     # scrappy_url_page()
     # print(list_links, len(list_links))
+    agency_ad_and_phone_list = agency.get_all_agency()
+    print(agency_ad_and_phone_list)
