@@ -6,34 +6,23 @@ import settings
 import agency
 
 
-def write_page_html():
-    req = requests.get(settings.BASE_URL.format(settings.COLUMN_NAME[0], 1), headers=settings.HEADERS)  # temporary page=1
+def write_html_page(column: int, page: int):
+    req = requests.get(settings.BASE_URL.format(settings.COLUMN_NAME[column], page), headers=settings.HEADERS)
     src = req.text
-    with open("index.html", "w") as file:
+    with open(f"index{page}.html", "w") as file:
         file.write(src)
 
 
-def scrappy_ad_info():
-    with open("index.html", "r") as file:
+def read_html_page(page: int):
+    """read one page and return soup-object"""
+    with open(f"index{page}.html", "r") as file:
         source = file.read()
-    soup = BeautifulSoup(source, "lxml")
-    link_list, ad_description_list, author_list = [], [], []
-    raw_links = soup.find_all("a", class_="titleline")  # and raw_ad_name
-    for link in raw_links:
-        link_list.append(link.get("href"))
-    for ad_description in raw_links:
-        ad_description_list.append(re.sub(r'\s+', ' ', ad_description.get_text()).strip())
-    raw_author = soup.find_all("td", class_="col-author")
-    for author in raw_author:
-        author_list.append(re.sub(r'\s+', ' ', author.get_text(",")).strip())
-    all_ad_list = list(zip(link_list, ad_description_list, author_list))
+    return BeautifulSoup(source, "lxml")
 
 
 def check_pagination() -> int:
-    """return total number of ad pages"""
-    with open("index.html", "r") as file:
-        source = file.read()
-    soup = BeautifulSoup(source, "lxml")
+    """return total amount of ad pages"""
+    soup = read_html_page(1)
     soup_string = soup.find("div", class_="link_bar").get_text(separator=",", strip=True)
     temp_list = list(soup_string.split(","))
     if temp_list[-1] == 'следующая →':
@@ -42,16 +31,70 @@ def check_pagination() -> int:
         return 1
 
 
+def scrappy_ad_link(page: int, link_list: list) -> list:
+    soup = read_html_page(page)
+    raw_links = soup.find_all("a", class_="titleline")
+    for link in raw_links:
+        link_list.append(link.get("href"))
+    return link_list
+
+
+def scrappy_ad_description(page: int, ad_description_list: list) -> list:
+    soup = read_html_page(page)
+    raw_description = soup.find_all("a", class_="titleline")
+    for ad_description in raw_description:
+        ad_description_list.append(re.sub(r'\s+', ' ', ad_description.get_text()).strip())
+    return ad_description_list
+
+
+def scrappy_ad_author(page: int, ad_author_list: list) -> list:
+    soup = read_html_page(page)
+    raw_author = soup.find_all("a", title=re.compile("найти все объявления автора"))
+    for author in raw_author:
+        ad_author_list.append(author.get_text())
+    return ad_author_list
+
+
+def scrappy_ad_phone(page: int, ad_phone_list: list) -> list:
+    soup = read_html_page(page)
+    raw_phone = soup.find_all("div", class_="phone", title="Телефон")
+    for phone in raw_phone:
+        ad_phone_list.append(phone.get_text())
+    return ad_phone_list
+
+
+def scrappy_ad_date(page: int, ad_date_list: list) -> list:
+    soup = read_html_page(page)
+    raw_date = soup.find_all("div", class_="tabdate", style="font-size:11px")
+    for date in raw_date:
+        ad_date_list.append(date.get_text())
+    return ad_date_list
+
+
+def get_all_ads() -> list:
+    all_link_list, all_description_list, all_author_list, all_phone_list, all_date_list = [], [], [], [], []
+    write_html_page(const_rubric, 1)
+    amount_ad_page = check_pagination()
+    for ad_page in range(2, amount_ad_page + 1):
+        write_html_page(const_rubric, ad_page)
+    for ad_link in range(1, amount_ad_page + 1):
+        scrappy_ad_link(ad_link, all_link_list)
+    for ad_description in range(1, amount_ad_page + 1):
+        scrappy_ad_description(ad_description, all_description_list)
+    for ad_author in range(1, amount_ad_page + 1):
+        scrappy_ad_author(ad_author, all_author_list)
+    for ad_phone in range(1, amount_ad_page + 1):
+        scrappy_ad_phone(ad_phone, all_phone_list)
+    for ad_date in range(1, amount_ad_page + 1):
+        scrappy_ad_date(ad_date, all_date_list)
+    return list(zip(all_link_list, all_description_list, all_author_list, all_phone_list, all_date_list))
+
+
 def save_in_db():
     pass
 
 
 if __name__ == '__main__':
-    # write_page_html()
-    # scrappy_ad_info()
-    # print(check_pagination())
-    # list_links = []
-    # scrappy_url_page()
-    # print(list_links, len(list_links))
-    agency_ad_and_phone_list = agency.get_all_agency()
-    print(agency_ad_and_phone_list)
+    const_rubric = 0  # TODO Its temporarily. You will get it from telegram module
+    # TODO get_all_ads() dont work correctly: some ad dont have all need data and zip() cut them
+
