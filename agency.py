@@ -4,7 +4,7 @@ import requests
 import settings
 
 
-def write_agency_html(page: int):
+def write_agency_html(page: int) -> None:
     """write in html file"""
     req = requests.get(settings.AGENCY_URL.format(page), headers=settings.HEADERS)
     src = req.text
@@ -21,7 +21,7 @@ def read_html_page(page: int):
 
 def get_page_count(page: int) -> int:
     """return total number of agency pages"""
-    soup = read_html_page(1)
+    soup = read_html_page(page)
     return int(soup.find("span", class_="pagelinklast").get_text())
 
 
@@ -60,4 +60,3 @@ def get_all_agency() -> list:
 
 if __name__ == '__main__':
     agency_ad_and_phone_list = get_all_agency()
-    print(agency_ad_and_phone_list)
