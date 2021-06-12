@@ -1,20 +1,22 @@
+import re
 from bs4 import BeautifulSoup
 import requests
 
 import settings
+from format import format_phone
 
 
 def write_agency_html(page: int) -> None:
     """write in html file"""
     req = requests.get(settings.AGENCY_URL.format(page), headers=settings.HEADERS)
     src = req.text
-    with open(f"agency{page}.html", "w") as file:
+    with open(f"temp/agency{page}.html", "w") as file:
         file.write(src)
 
 
 def read_html_page(page: int):
     """read one page and return soup-object"""
-    with open(f"agency{page}.html", "r") as file:
+    with open(f"temp/agency{page}.html", "r") as file:
         source = file.read()
     return BeautifulSoup(source, "lxml")
 
@@ -25,38 +27,31 @@ def get_page_count(page: int) -> int:
     return int(soup.find("span", class_="pagelinklast").get_text())
 
 
-def scrappy_agency_name(page: int, agency_list: list) -> list:
+def scrappy_agency(page: int, agency_list: list) -> list:
     """collects the agency name from a single page"""
     soup = read_html_page(page)
-    agency_raw = soup.find_all("h2", style="padding-top:0px")
+    agency_raw = soup.find_all("div", class_="anryblimg2")
+    name, phone = [], []  # TODO remove, cuz iter?
     for agency in agency_raw:
-        agency_list.append(agency.get_text().strip())
-    return agency_list
-
-
-def scrappy_agency_phone(page: int, agency_phone_list: list) -> list:
-    """collects agency phone numbers from a single page"""
-    soup = read_html_page(page)
-    agency_phone_raw = soup.find_all("div", "span", class_="anrybls")
-    for agency_phone in agency_phone_raw:
-        if "Телефон:" in agency_phone.get_text().strip():
-            agency_phone_list.append(agency_phone.get_text().strip())
-    return agency_phone_list
+        if agency.find("b", text=re.compile("Телефон:")):
+            name.append(agency.find("h2", style="padding-top:0px").get_text(strip=True))
+            phone.append(format_phone(agency.find("b", text="Телефон:").parent.get_text(strip=True)))
+        else:
+            continue
+    return agency_list.extend(list(zip(name, phone)))
 
 
 def get_all_agency() -> list:
     """we take all the data and import it into the main file"""
-    all_agency_list, all_phone_list = [], []
+    all_agency_list = []
     write_agency_html(1)
     agency_page_count = get_page_count(1)
     for pages in range(2, agency_page_count + 1):
         write_agency_html(pages)
-    for names in range(1, agency_page_count + 1):
-        scrappy_agency_name(names, all_agency_list)
-    for phones in range(1, agency_page_count + 1):
-        scrappy_agency_phone(phones, all_phone_list)
-    return list(zip(all_agency_list, all_phone_list))
+    for agency in range(1, agency_page_count + 1):
+        scrappy_agency(agency, all_agency_list)
+    return all_agency_list
 
 
 if __name__ == '__main__':
-    agency_ad_and_phone_list = get_all_agency()
+    print(get_all_agency())

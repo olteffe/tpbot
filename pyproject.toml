@@ -9,6 +9,9 @@ python = "^3.9"
 requests = "^2.25.1"
 bs4 = "^0.0.1"
 lxml = "^4.6.3"
+aiogram = "^2.13"
+redis = "^3.5.3"
+SQLAlchemy = "^1.4.17"
 
 [tool.poetry.dev-dependencies]
 

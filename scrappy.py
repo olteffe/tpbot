@@ -3,19 +3,20 @@ import re
 from bs4 import BeautifulSoup
 
 import settings
+from format import format_phone, format_date
 
 
 def write_html_page(column: int, page: int):
     """write the html-doc file to the hard disk"""
     req = requests.get(settings.BASE_URL.format(settings.COLUMN_NAME[column], page), headers=settings.HEADERS)
     src = req.text
-    with open(f"index{page}.html", "w") as file:
+    with open(f"temp/index{page}.html", "w") as file:
         file.write(src)
 
 
 def read_html_page(page: int):
     """read one page and return soup-object"""
-    with open(f"index{page}.html", "r") as file:
+    with open(f"temp/index{page}.html", "r") as file:
         source = file.read()
     return BeautifulSoup(source, "lxml")
 
@@ -55,10 +56,10 @@ def parse_single_ad_info(single_id: str, page: int) -> dict:
     description = raw_ad_unit.find("a", class_="titleline").get_text(strip=True)
     author = raw_ad_unit.find("a", title=re.compile("найти все объявления автора")).get_text()
     try:
-        phone = raw_ad_unit.find("div", class_="phone", title="Телефон").get_text()
+        phone = format_phone(raw_ad_unit.find("div", class_="phone", title="Телефон").get_text())
     except AttributeError:
         phone = "Null"
-    date = raw_ad_unit.find("div", class_="tabdate", style="font-size:11px").get_text(strip=True)
+    date = format_date(raw_ad_unit.find("div", class_="tabdate", style="font-size:11px").get_text(strip=True))
     link = raw_ad_unit.find("a", class_="titleline").get("href")
     return {"link": link, "author": author, "description": description, "phone": phone, "date": date}
 
