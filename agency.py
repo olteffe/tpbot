@@ -31,14 +31,15 @@ def scrappy_agency(page: int, agency_list: list) -> list:
     """collects the agency name from a single page"""
     soup = read_html_page(page)
     agency_raw = soup.find_all("div", class_="anryblimg2")
-    name, phone = [], []  # TODO remove, cuz iter?
     for agency in agency_raw:
         if agency.find("b", text=re.compile("Телефон:")):
-            name.append(agency.find("h2", style="padding-top:0px").get_text(strip=True))
-            phone.append(format_phone(agency.find("b", text="Телефон:").parent.get_text(strip=True)))
+            name = agency.find("h2", style="padding-top:0px").get_text(strip=True)
+            phone = format_phone(agency.find("b", text="Телефон:").parent.get_text(strip=True))
+            for i in phone:  # each phone in the list refers to one agency
+                agency_list.append({"name": name, "phone": i})
         else:
             continue
-    return agency_list.extend(list(zip(name, phone)))
+    return agency_list
 
 
 def get_all_agency() -> list:
