@@ -8,6 +8,7 @@ test/
 temp/*.html
 test.py
 *.txt
+*.csv
 
 ### Python template
 # Byte-compiled / optimized / DLL files

@@ -1,6 +1,7 @@
 import requests
 import re
 from bs4 import BeautifulSoup
+import csv
 
 import settings
 from format import format_phone, format_date
@@ -56,7 +57,7 @@ def parse_single_ad_info(single_id: str, page: int) -> dict:
     description = raw_ad_unit.find("a", class_="titleline").get_text(strip=True)
     author = raw_ad_unit.find("a", title=re.compile("найти все объявления автора")).get_text()
     try:
-        phone = format_phone(raw_ad_unit.find("div", class_="phone", title="Телефон").get_text())
+        phone = "".join(format_phone(raw_ad_unit.find("div", class_="phone", title="Телефон").get_text()))
     except AttributeError:
         phone = "Null"
     date = format_date(raw_ad_unit.find("div", class_="tabdate", style="font-size:11px").get_text(strip=True))
@@ -87,4 +88,8 @@ def get_all_ads() -> list:
 
 
 if __name__ == '__main__':
-    print(get_all_ads())
+    data = get_all_ads()
+    with open('./temp/ad.csv', 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=data[0])
+        writer.writeheader()
+        writer.writerows(data)

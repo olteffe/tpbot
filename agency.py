@@ -1,3 +1,4 @@
+import csv
 import re
 from bs4 import BeautifulSoup
 import requests
@@ -55,4 +56,8 @@ def get_all_agency() -> list:
 
 
 if __name__ == '__main__':
-    print(get_all_agency())
+    data = get_all_agency()
+    with open('./temp/agency.csv', 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=data[0])
+        writer.writeheader()
+        writer.writerows(data)
